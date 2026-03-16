@@ -3,99 +3,80 @@ import pandas as pd
 import requests
 import os
 
-# --- НАСТРОЙКИ (ЗАПОЛНИТЕ СВОИ) ---
+# --- НАСТРОЙКИ ---
 TOKEN = "ВАШ_ТОКЕН"
 CHAT_ID = "ВАШ_CHAT_ID"
 DB_FILE = "data.csv"
 
-# 1. ДИЗАЙН
+# 1. ДИЗАЙН (Все прозрачно и понятно)
 st.markdown("""
     <style>
     section[data-testid="stSidebar"] { width: 170px !important; min-width: 170px !important; }
     .stApp { background: #0f172a; color: white; }
     h1, h2, h3 { color: #60a5fa !important; }
-    .card { 
-        background: rgba(255, 255, 255, 0.05); 
-        padding: 20px; 
-        border-radius: 15px; 
-        margin-bottom: 20px; 
-        border: 1px solid rgba(255, 255, 255, 0.1); 
-    }
+    .card { background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.1); }
     .stButton>button { background: #3b82f6; color: white !important; border-radius: 8px; width: 100%; border: none; }
-    .review-form { background: rgba(255, 255, 255, 0.1); padding: 20px; border-radius: 15px; margin-bottom: 30px; }
     </style>
     """, unsafe_allow_html=True)
 
-# 2. ФУНКЦИИ ДАННЫХ
+# 2. ДАННЫЕ
 def load_data():
     if not os.path.exists(DB_FILE):
         df = pd.DataFrame(columns=["date", "type", "title", "content", "file_url"])
         df.to_csv(DB_FILE, index=False)
         return df
-    try:
-        return pd.read_csv(DB_FILE).fillna("")
-    except:
-        return pd.DataFrame(columns=["date", "type", "title", "content", "file_url"])
+    return pd.read_csv(DB_FILE).fillna("")
 
 def save_item(t, tit, con, url):
-    new_row = pd.DataFrame([{
-        "date": pd.Timestamp.now().strftime("%d.%m.%Y"),
-        "type": t, "title": tit, "content": con, "file_url": url.strip()
-    }])
+    new_row = pd.DataFrame([{"date": pd.Timestamp.now().strftime("%d.%m.%Y"), "type": t, "title": tit, "content": con, "file_url": url.strip()}])
     new_row.to_csv(DB_FILE, mode='a', header=False, index=False)
 
 data = load_data()
 
 # 3. МЕНЮ
-st.sidebar.title("💎 МЕНЮ")
+st.sidebar.title("💎 ГИПНОЗ")
 page = st.sidebar.radio("", ["Главная", "Блог", "Медитации", "Отзывы", "Записаться", "🔒 Админка"])
 
-# 4. СТРАНИЦЫ
+# 4. ЛОГИКА СТРАНИЦ
 if page == "Главная":
-    st.title("Специалист по гипнозу")
-    st.write("Добро пожаловать. Используйте меню слева для навигации.")
+    st.title("Добро пожаловать")
+    st.write("Вы здесь, чтобы изменить свою реальность. Посмотрите мои статьи или послушайте медитации в меню слева.")
 
 elif page == "Блог":
     st.title("📜 Блог")
-    posts = data[data["type"] == "Пост"].iloc[::-1]
-    for _, row in posts.iterrows():
-        st.markdown(f'<div class="card"><h3>{row["title"]}</h3><p style="color:#94a3b8">{row["date"]}</p><p>{row["content"]}</p></div>', unsafe_allow_html=True)
+    for _, row in data[data["type"] == "Пост"].iloc[::-1].iterrows():
+        st.markdown(f'<div class="card"><h3>{row["title"]}</h3><p style="color:gray">{row["date"]}</p><p>{row["content"]}</p></div>', unsafe_allow_html=True)
         if row["file_url"]: st.image(row["file_url"])
 
 elif page == "Медитации":
     st.title("🎧 Медитации")
-    meds = data[data["type"] == "Медитация"].iloc[::-1]
-    for _, row in meds.iterrows():
+    for _, row in data[data["type"] == "Медитация"].iloc[::-1].iterrows():
         st.markdown(f'<div class="card"><h3>{row["title"]}</h3><p>{row["content"]}</p></div>', unsafe_allow_html=True)
         if row["file_url"]: st.audio(row["file_url"])
 
 elif page == "Отзывы":
-    st.title("💬 Отзывы клиентов")
+    st.title("💬 Отзывы")
     
-    # КНОПКА И ФОРМА ДЛЯ КЛИЕНТА
-    with st.expander("➕ Оставить свой отзыв"):
-        with st.form("client_review", clear_on_submit=True):
-            name = st.text_input("Ваше имя")
-            text = st.text_area("Ваш отзыв")
-            photo = st.text_input("Ссылка на фото (необязательно)")
-            if st.form_submit_button("Опубликовать отзыв"):
+    # Кнопка для всех без входа!
+    with st.expander("✨ Оставить свой отзыв"):
+        with st.form("simple_review", clear_on_submit=True):
+            name = st.text_input("Ваше имя или ник в соцсетях")
+            text = st.text_area("Ваши впечатления")
+            social_link = st.text_input("Ссылка на ваш профиль (по желанию, для доверия)")
+            if st.form_submit_button("Опубликовать"):
                 if name and text:
-                    save_item("Отзыв", name, text, photo)
-                    # Опционально: уведомление вам в Telegram о новом отзыве
-                    requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", 
-                                  json={"chat_id": CHAT_ID, "text": f"🌟 Новый отзыв на сайте от: {name}"})
-                    st.success("Спасибо! Ваш отзыв опубликован.")
+                    # Сохраняем отзыв. В поле file_url запишем ссылку на соцсеть, если она есть
+                    save_item("Отзыв", name, text, social_link)
+                    requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", json={"chat_id": CHAT_ID, "text": f"🌟 НОВЫЙ ОТЗЫВ!\nОт: {name}\nТекст: {text}"})
+                    st.success("Спасибо! Ваш отзыв добавлен.")
                     st.rerun()
-                else:
-                    st.error("Пожалуйста, введите имя и текст отзыва.")
 
-    # ВЫВОД ОТЗЫВОВ
-    revs = data[data["type"] == "Отзыв"].iloc[::-1]
-    for _, row in revs.iterrows():
+    # Показываем отзывы
+    for _, row in data[data["type"] == "Отзыв"].iloc[::-1].iterrows():
         with st.container():
-            st.markdown(f'<div class="card"><h3>{row["title"]}</h3><p>{row["content"]}</p></div>', unsafe_allow_html=True)
-            if row["file_url"]:
-                st.image(row["file_url"], caption=f"Фото от {row['title']}")
+            # Если есть ссылка на соцсеть, делаем имя кликабельным
+            header = f'<a href="{row["file_url"]}" style="text-decoration:none; color:#60a5fa;">👤 {row["title"]}</a>' if "http" in str(row["file_url"]) else f'👤 {row["title"]}'
+            st.markdown(f'<div class="card"><h3>{header}</h3><p>{row["content"]}</p></div>', unsafe_allow_html=True)
 
 elif page == "Записаться":
     st.title("📅 Запись")
@@ -103,17 +84,14 @@ elif page == "Записаться":
         n, c, m = st.text_input("Имя"), st.text_input("Контакт"), st.text_area("Запрос")
         if st.form_submit_button("Отправить"):
             requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", json={"chat_id": CHAT_ID, "text": f"Заявка!\n{n}\n{c}\n{m}"})
-            st.success("Отправлено!")
+            st.success("Заявка отправлена!")
 
 elif page == "🔒 Админка":
-    st.title("Управление")
     if st.text_input("Пароль", type="password") == "admin":
-        with st.form("add_admin", clear_on_submit=True):
+        with st.form("admin_add"):
             t = st.selectbox("Тип", ["Пост", "Медитация", "Отзыв"])
-            tit = st.text_input("Заголовок")
-            con = st.text_area("Текст")
-            url = st.text_input("Ссылка на файл")
-            if st.form_submit_button("Опубликовать"):
+            tit, con, url = st.text_input("Заголовок"), st.text_area("Текст"), st.text_input("Ссылка")
+            if st.form_submit_button("Сохранить"):
                 save_item(t, tit, con, url)
-                st.success("Сохранено!")
+                st.success("Готово!")
                 st.rerun()

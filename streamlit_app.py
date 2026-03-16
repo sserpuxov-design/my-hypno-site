@@ -16,7 +16,7 @@ st.markdown("""
     h1, h2, h3 { color: #60a5fa !important; }
     .card { background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.1); }
     .stButton>button { background: #3b82f6; color: white !important; border-radius: 8px; width: 100%; border: none; }
-    .user-info { font-size: 0.8em; color: #94a3b8; }
+    .auth-badge { font-size: 0.7em; background: #0ea5e9; color: white; padding: 2px 8px; border-radius: 10px; margin-left: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -42,60 +42,58 @@ page = st.sidebar.radio("", ["Главная", "Блог", "Медитации",
 if page == "Отзывы":
     st.title("💬 Отзывы клиентов")
 
-    # --- СЕКЦИЯ АВТОРИЗАЦИИ И ОТЗЫВА ---
-    # Проверяем, залогинен ли пользователь через встроенный механизм Streamlit
-    if not st.experimental_user.is_logged_in:
-        if st.button("🔐 Войти через Google, чтобы оставить отзыв"):
-            st.login() # Вызывает стандартное окно входа Google/GitHub/Email
-    else:
-        user = st.experimental_user
-        with st.expander(f"✅ Вы вошли как {user.name}. Написать отзыв"):
-            with st.form("auth_review", clear_on_submit=True):
-                u_text = st.text_area("Ваш отзыв")
+    # ПРОВЕРКА ПОЛЬЗОВАТЕЛЯ
+    # В Streamlit Cloud st.user содержит данные, если включена авторизация в настройках
+    user = st.user 
+
+    if user:
+        with st.expander(f"✅ Вы вошли как {user.email}. Оставить отзыв"):
+            with st.form("confirmed_review", clear_on_submit=True):
+                u_text = st.text_area("Ваш текст")
                 if st.form_submit_button("Опубликовать"):
                     if u_text:
-                        # Сохраняем имя из Google и почту для надежности
-                        display_name = f"{user.name} ({user.email})"
-                        save_item("Отзыв", user.name, u_text, user.email)
+                        # Берем имя из почты (до @)
+                        u_name = user.email.split('@')[0]
+                        save_item("Отзыв", u_name, u_text, user.email)
                         
-                        msg = f"🌟 НОВЫЙ ПОДТВЕРЖДЕННЫЙ ОТЗЫВ!\nОт: {user.name}\nEmail: {user.email}\nТекст: {u_text}"
-                        requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", json={"chat_id": CHAT_ID, "text": msg})
-                        
-                        st.success("Отзыв успешно опубликован!")
+                        # Сообщение вам
+                        requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", 
+                                      json={"chat_id": CHAT_ID, "text": f"✅ РЕАЛЬНЫЙ ОТЗЫВ!\nОт: {user.email}\nТекст: {u_text}"})
+                        st.success("Отзыв добавлен!")
                         st.rerun()
-                    else:
-                        st.error("Введите текст!")
-        
-        if st.button("Выйти из аккаунта"):
-            st.logout()
+    else:
+        st.info("Чтобы оставить отзыв от своего имени, пожалуйста, авторизуйтесь в системе Streamlit (кнопка в правом верхнем углу или в меню приложения).")
+        st.write("Это нужно, чтобы мы знали, что вы реальный человек.")
 
-    # --- ВЫВОД ОТЗЫВОВ ---
+    # ВЫВОД
     revs = data[data["type"] == "Отзыв"].iloc[::-1]
     for _, row in revs.iterrows():
         st.markdown(f'''
             <div class="card">
                 <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <div style="font-weight: bold; color: #60a5fa;">👤 {row["title"]}</div>
-                    <div style="margin-left: 10px; font-size: 0.7em; background: #1e293b; padding: 2px 8px; border-radius: 10px;">Подтвержденный отзыв</div>
+                    <b style="color: #60a5fa;">👤 {row["title"]}</b>
+                    <span class="auth-badge">Подтвержден аккаунтом</span>
                 </div>
                 <div>{row["content"]}</div>
             </div>
         ''', unsafe_allow_html=True)
 
-# (Остальные страницы остаются без изменений)
+# Код остальных вкладок
 elif page == "Главная":
-    st.title("Добро пожаловать")
-    st.write("Трансформация сознания через научный подход.")
+    st.title("Специалист по гипнозу")
+    st.write("Трансформация через подсознание.")
 
 elif page == "Блог":
     st.title("📜 Блог")
-    for _, row in data[data["type"] == "Пост"].iloc[::-1].iterrows():
+    posts = data[data["type"] == "Пост"].iloc[::-1]
+    for _, row in posts.iterrows():
         st.markdown(f'<div class="card"><h3>{row["title"]}</h3><p style="color:gray">{row["date"]}</p><p>{row["content"]}</p></div>', unsafe_allow_html=True)
         if row["file_url"]: st.image(row["file_url"])
 
 elif page == "Медитации":
     st.title("🎧 Медитации")
-    for _, row in data[data["type"] == "Медитация"].iloc[::-1].iterrows():
+    meds = data[data["type"] == "Медитация"].iloc[::-1]
+    for _, row in meds.iterrows():
         st.markdown(f'<div class="card"><h3>{row["title"]}</h3><p>{row["content"]}</p></div>', unsafe_allow_html=True)
         if row["file_url"]: st.audio(row["file_url"])
 
@@ -105,7 +103,7 @@ elif page == "Записаться":
         n, c, m = st.text_input("Имя"), st.text_input("Контакт"), st.text_area("Запрос")
         if st.form_submit_button("Отправить"):
             requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", json={"chat_id": CHAT_ID, "text": f"ЗАЯВКА!\n{n}\n{c}\n{m}"})
-            st.success("Заявка отправлена!")
+            st.success("Отправлено!")
 
 elif page == "🔒 Админка":
     if st.text_input("Пароль", type="password") == "admin":

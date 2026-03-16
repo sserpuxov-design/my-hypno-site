@@ -3,6 +3,55 @@ from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 import requests
 
+# --- БЛОК КРАСИВОГО ДИЗАЙНА ---
+st.markdown("""
+    <style>
+    /* Фон всего сайта */
+    .stApp {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    }
+    
+    /* Красивые карточки для постов и медитаций */
+    div.stChatMessage, div[data-testid="stExpander"], .stAlert {
+        background: rgba(255, 255, 255, 0.7) !important;
+        backdrop-filter: blur(10px);
+        border-radius: 20px !important;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+        animation: fadeIn 0.8s ease-in-out;
+    }
+
+    /* Анимация появления */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Стиль заголовков */
+    h1, h2, h3 {
+        color: #2c3e50;
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+    }
+
+    /* Кнопки */
+    .stButton>button {
+        border-radius: 12px;
+        background-color: #4A90E2;
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    .stButton>button:hover {
+        transform: scale(1.02);
+        box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 # --- КОНФИГУРАЦИЯ ---
 TOKEN = "ВАШ_ТОКЕН_БОТА"  # Получите у @BotFather
 CHAT_ID = "ВАШ_CHAT_ID"    # Получите у @userinfobot

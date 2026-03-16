@@ -8,7 +8,7 @@ TOKEN = "ВАШ_ТОКЕН"
 CHAT_ID = "ВАШ_CHAT_ID"
 DB_FILE = "data.csv"
 
-# 1. ДИЗАЙН (Темный, узкое меню, белые буквы)
+# 1. ДИЗАЙН
 st.markdown("""
     <style>
     section[data-testid="stSidebar"] { width: 180px !important; min-width: 180px !important; }
@@ -27,12 +27,15 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # 2. РАБОТА С ДАННЫМИ
-if not os.path.exists(DB_FILE):
-    df = pd.DataFrame(columns=["date", "type", "title", "content", "file_url"])
-    df.to_csv(DB_FILE, index=False)
-
 def load_data():
-    return pd.read_csv(DB_FILE).fillna("")
+    if not os.path.exists(DB_FILE):
+        df = pd.DataFrame(columns=["date", "type", "title", "content", "file_url"])
+        df.to_csv(DB_FILE, index=False)
+        return df
+    try:
+        return pd.read_csv(DB_FILE).fillna("")
+    except:
+        return pd.DataFrame(columns=["date", "type", "title", "content", "file_url"])
 
 data = load_data()
 
@@ -62,12 +65,12 @@ elif page == "Медитации":
 elif page == "Отзывы":
     st.title("💬 Отзывы клиентов")
     revs = data[data["type"] == "Отзыв"].iloc[::-1]
-    if revs.empty:
-        st.info("Здесь пока нет отзывов. Добавьте их через Админку.")
+    if len(revs) == 0:
+        st.info("Отзывов пока нет. Зайдите в Админку, чтобы добавить первый.")
     for _, row in revs.iterrows():
         st.markdown(f'<div class="card"><h3>{row["title"]}</h3><p>{row["content"]}</p></div>', unsafe_allow_html=True)
         if row["file_url"]:
-            if "youtu" in row["file_url"]: st.video(row["file_url"])
+            if "youtu" in str(row["file_url"]): st.video(row["file_url"])
             else: st.image(row["file_url"])
 
 elif page == "Записаться":
@@ -79,14 +82,20 @@ elif page == "Записаться":
             st.success("Отправлено!")
 
 elif page == "🔒 Админка":
-    st.title("Управление сайтом")
+    st.title("Управление")
     if st.text_input("Пароль", type="password") == "admin":
-        with st.form("add"):
+        with st.form("add", clear_on_submit=True):
             t = st.selectbox("Тип", ["Пост", "Медитация", "Отзыв"])
-            tit = st.text_input("Заголовок (например, Имя клиента)")
-            con = st.text_area("Текст поста/отзыва")
-            url = st.text_input("Ссылка на картинку (скриншот)")
-            if st.form_submit_button("Сохранить"):
-                new = pd.DataFrame([{"date": "16.03.2026", "type": t, "title": tit, "content": con, "file_url": url.strip()}])
-                new.to_csv(DB_FILE, mode='a', header=False, index=False)
-                st.success("Готово! Перезагрузите страницу в браузере.")
+            tit = st.text_input("Заголовок")
+            con = st.text_area("Текст")
+            url = st.text_input("Ссылка на файл")
+            submit = st.form_submit_button("Опубликовать")
+            
+            if submit:
+                new_data = pd.DataFrame([{
+                    "date": pd.Timestamp.now().strftime("%d.%m.%Y"),
+                    "type": t, "title": tit, "content": con, "file_url": url.strip()
+                }])
+                new_data.to_csv(DB_FILE, mode='a', header=False, index=False)
+                st.success("Данные сохранены!")
+                st.rerun() # ПРИНУДИТЕЛЬНАЯ ПЕРЕЗАГРУЗКА

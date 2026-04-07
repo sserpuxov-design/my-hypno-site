@@ -1596,29 +1596,27 @@
   }
 
   // ─── FORM SUBMIT (placeholder — connect to your backend/CRM)
-  function submitForm() {
-    const TOKEN = "8652473144:AAFphLofbLmt20Bn6iFgOr2acQb9wFWZtyQ"; // Оставь свой токен
-    const CHAT_ID = "8026264900";       // Оставь свой ID
+ function submitForm() {
+    const TOKEN = "ТВОЙ_ТОКЕН_БОТА"; 
+    const CHAT_ID = "ТВОЙ_ID";       
     const URI_API = `https://api.telegram.org/bot${ TOKEN }/sendMessage`;
 
     const name = document.getElementById('fname').value.trim();
     const contact = document.getElementById('fcontact').value.trim();
     const format = document.getElementById('fformat').value;
-    
-    // ДОБАВИЛИ ВОТ ЭТУ СТРОКУ (берем текст проблемы):
-    const messageText = document.getElementById('fmessage').value.trim();
+    const messageField = document.getElementById('fmessage');
+    const messageText = messageField ? messageField.value.trim() : "";
 
     if (!name || !contact) {
         alert('Пожалуйста, заполните имя и контакт.');
         return;
     }
 
-    // ОБНОВИЛИ ШАБЛОН СООБЩЕНИЯ (добавили пункт "Проблема"):
-    let message = `<b>🔔 Новая заявка Wayfinder!</b>\n`;
+    let message = `<b>🔔 Новая заявка!</b>\n`;
     message += `<b>Имя:</b> ${ name }\n`;
     message += `<b>Контакт:</b> ${ contact }\n`;
     message += `<b>Формат:</b> ${ format }\n`;
-    message += `<b>Проблема:</b> ${ messageText ? messageText : 'Не указана' }`;
+    message += `<b>Проблема:</b> ${ messageText || 'Не указана' }`;
 
     fetch(URI_API, {
         method: 'POST',
@@ -1632,15 +1630,19 @@
     .then(response => {
         if (response.ok) {
             const modal = document.querySelector('.modal');
+            // ВОТ ЗДЕСЬ Я ВСЁ ПОЧИСТИЛ:
             modal.innerHTML = `
                 <div style="text-align:center; padding: 2rem 0;">
                     <div style="font-size: 2.5rem; margin-bottom: 1rem;">✓</div>
                     <h3 style="margin-bottom: 0.75rem;">Заявка принята!</h3>
-                    <p style="color: var(--muted); font-size: 0.9rem;">
-                        Дмитрий, данные уже у вас в Telegram.
+                    <p style="color: var(--muted); font-size: 0.9rem; line-height: 1.7;">
+                        Свяжемся с вами в ближайшее время.
                     </p>
                     <button class="btn-gold" style="margin-top: 2rem;" onclick="closeModal()">Закрыть</button>
-                </div>`;
+                </div>
+            `;
+        } else {
+            alert('Ошибка при отправке. Попробуйте еще раз.');
         }
     });
 }

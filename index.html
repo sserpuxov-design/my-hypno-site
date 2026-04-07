@@ -1597,23 +1597,53 @@
 
   // ─── FORM SUBMIT (placeholder — connect to your backend/CRM)
   function submitForm() {
-    // 1. Твои данные доступа
-    const TOKEN = "8652473144:AAFphLofbLmt20Bn6iFgOr2acQb9wFWZtyQ";
-    const CHAT_ID = "8026264900";
+    const TOKEN = "8652473144:AAFphLofbLmt20Bn6iFgOr2acQb9wFWZtyQ"; // Оставь свой токен
+    const CHAT_ID = "8026264900";       // Оставь свой ID
     const URI_API = `https://api.telegram.org/bot${ TOKEN }/sendMessage`;
 
-    // 2. Сбор данных из полей (используем твои ID: fname и fcontact)
     const name = document.getElementById('fname').value.trim();
     const contact = document.getElementById('fcontact').value.trim();
+    const format = document.getElementById('fformat').value;
     
-    // Получаем формат сессии (если есть такое поле, если нет — отправится 'Не указано')
-    const formatElement = document.getElementById('fformat');
-    const format = formatElement ? formatElement.value : 'Не указано';
+    // ДОБАВИЛИ ВОТ ЭТУ СТРОКУ (берем текст проблемы):
+    const messageText = document.getElementById('fmessage').value.trim();
 
     if (!name || !contact) {
         alert('Пожалуйста, заполните имя и контакт.');
         return;
     }
+
+    // ОБНОВИЛИ ШАБЛОН СООБЩЕНИЯ (добавили пункт "Проблема"):
+    let message = `<b>🔔 Новая заявка Wayfinder!</b>\n`;
+    message += `<b>Имя:</b> ${ name }\n`;
+    message += `<b>Контакт:</b> ${ contact }\n`;
+    message += `<b>Формат:</b> ${ format }\n`;
+    message += `<b>Проблема:</b> ${ messageText ? messageText : 'Не указана' }`;
+
+    fetch(URI_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            chat_id: CHAT_ID,
+            parse_mode: 'html',
+            text: message
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            const modal = document.querySelector('.modal');
+            modal.innerHTML = `
+                <div style="text-align:center; padding: 2rem 0;">
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">✓</div>
+                    <h3 style="margin-bottom: 0.75rem;">Заявка принята!</h3>
+                    <p style="color: var(--muted); font-size: 0.9rem;">
+                        Дмитрий, данные уже у вас в Telegram.
+                    </p>
+                    <button class="btn-gold" style="margin-top: 2rem;" onclick="closeModal()">Закрыть</button>
+                </div>`;
+        }
+    });
+}
 
     // 3. Формируем текст сообщения для тебя в Telegram
     let message = `<b>🔔 Новая заявка с сайта!</b>\n`;

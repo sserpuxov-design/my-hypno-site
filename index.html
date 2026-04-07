@@ -1597,15 +1597,21 @@
 
   // ─── FORM SUBMIT (placeholder — connect to your backend/CRM)
  function submitForm() {
-    const TOKEN = "8652473144:AAFphLofbLmt20Bn6iFgOr2acQb9wFWZtyQ"; 
-    const CHAT_ID = "8026264900";       
-    const URI_API = `https://api.telegram.org/bot${ TOKEN }/sendMessage`;
+    const TOKEN = "ТВОЙ_ТОКЕН_БОТА"; 
+    const CHAT_ID = "ТВОЙ_ID";       
+    const URI_API = `https://api.telegram.org/bot${TOKEN}/sendMessage`;
 
-    const name = document.getElementById('fname').value.trim();
-    const contact = document.getElementById('fcontact').value.trim();
-    const format = document.getElementById('fformat').value;
+    const nameElement = document.getElementById('fname');
+    const contactElement = document.getElementById('fcontact');
+    const formatElement = document.getElementById('fformat');
     const messageField = document.getElementById('fmessage');
-    const messageText = messageField ? messageField.value.trim() : "";
+
+    if (!nameElement || !contactElement) return;
+
+    const name = nameElement.value.trim();
+    const contact = contactElement.value.trim();
+    const format = formatElement ? formatElement.value : "Не указан";
+    const messageText = messageField ? messageField.value.trim() : "Пусто";
 
     if (!name || !contact) {
         alert('Пожалуйста, заполните имя и контакт.');
@@ -1613,10 +1619,10 @@
     }
 
     let message = `<b>🔔 Новая заявка!</b>\n`;
-    message += `<b>Имя:</b> ${ name }\n`;
-    message += `<b>Контакт:</b> ${ contact }\n`;
-    message += `<b>Формат:</b> ${ format }\n`;
-    message += `<b>Проблема:</b> ${ messageText || 'Не указана' }`;
+    message += `<b>Имя:</b> ${name}\n`;
+    message += `<b>Контакт:</b> ${contact}\n`;
+    message += `<b>Формат:</b> ${format}\n`;
+    message += `<b>Проблема:</b> ${messageText}`;
 
     fetch(URI_API, {
         method: 'POST',
@@ -1630,23 +1636,25 @@
     .then(response => {
         if (response.ok) {
             const modal = document.querySelector('.modal');
-            // ВОТ ЗДЕСЬ Я ВСЁ ПОЧИСТИЛ:
-            modal.innerHTML = `
-                <div style="text-align:center; padding: 2rem 0;">
-                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">✓</div>
-                    <h3 style="margin-bottom: 0.75rem;">Заявка принята!</h3>
-                    <p style="color: var(--muted); font-size: 0.9rem; line-height: 1.7;">
-                        Свяжемся с вами в ближайшее время.
-                    </p>
-                    <button class="btn-gold" style="margin-top: 2rem;" onclick="closeModal()">Закрыть</button>
-                </div>
-            `;
+            if (modal) {
+                modal.innerHTML = `
+                    <div style="text-align:center; padding: 2rem 0;">
+                        <div style="font-size: 2.5rem; margin-bottom: 1rem;">✓</div>
+                        <h3 style="margin-bottom: 0.75rem;">Заявка принята!</h3>
+                        <p style="color: var(--muted); font-size: 0.9rem; line-height: 1.7;">
+                            Свяжемся с вами в ближайшее время.
+                        </p>
+                        <button class="btn-gold" style="margin-top: 2rem;" onclick="closeModal()">Закрыть</button>
+                    </div>`;
+            }
         } else {
-            alert('Ошибка при отправке. Попробуйте еще раз.');
+            alert('Ошибка отправки. Проверьте токен бота.');
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
     });
 }
-
     // 3. Формируем текст сообщения для тебя в Telegram
     let message = `<b>🔔 Новая заявка с сайта!</b>\n`;
     message += `<b>Имя:</b> ${ name }\n`;

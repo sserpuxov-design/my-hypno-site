@@ -1595,8 +1595,8 @@
     if (e.target === document.getElementById('modalOverlay')) closeModal();
   }
 
-  // ─── FORM SUBMIT (placeholder — connect to your backend/CRM)
- function submitForm() {
+  // ─── FORM SUBMIT (Telegram)
+  function submitForm() {
     const TOKEN = "ТВОЙ_ТОКЕН_БОТА"; 
     const CHAT_ID = "ТВОЙ_ID";       
     const URI_API = `https://api.telegram.org/bot${TOKEN}/sendMessage`;
@@ -1654,46 +1654,7 @@
     .catch(error => {
         console.error('Error:', error);
     });
-}
-    // 3. Формируем текст сообщения для тебя в Telegram
-    let message = `<b>🔔 Новая заявка с сайта!</b>\n`;
-    message += `<b>Имя:</b> ${ name }\n`;
-    message += `<b>Контакт:</b> ${ contact }\n`;
-    message += `<b>Формат:</b> ${ format }`;
-
-    // 4. Отправка запроса в Telegram
-    fetch(URI_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            chat_id: CHAT_ID,
-            parse_mode: 'html',
-            text: message
-        })
-    })
-    .then(response => {
-        if (response.ok) {
-            // 5. Если всё ушло, показываем твое красивое окно с галочкой
-            const modal = document.querySelector('.modal');
-            modal.innerHTML = `
-                <div style="text-align:center; padding: 2rem 0;">
-                    <div style="font-size: 2.5rem; margin-bottom: 1rem;">✓</div>
-                    <h3 style="margin-bottom: 0.75rem;">Заявка принята, Дмитрий!</h3>
-                    <p style="color: var(--muted); font-size: 0.9rem; line-height: 1.7;">
-                        Данные уже пришли мне в Telegram.<br>Свяжусь с вами в ближайшее время.
-                    </p>
-                    <button class="btn-gold" style="margin-top: 2rem;" onclick="closeModal()">Закрыть</button>
-                </div>
-            `;
-        } else {
-            alert('Ошибка при отправке в Telegram. Попробуйте еще раз.');
-        }
-    })
-    .catch(error => {
-        console.error('Ошибка:', error);
-        alert('Не удалось отправить. Проверьте соединение.');
-    });
-}
+  }
 
   // ─── COUNTER ANIMATION
   function animateCount(el, target, suffix) {

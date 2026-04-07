@@ -1601,18 +1601,22 @@
     const CHAT_ID = "8026264900";       
     const URI_API = `https://api.telegram.org/bot${TOKEN}/sendMessage`;
 
+    // 1. Берем элементы
     const nameElement = document.getElementById('fname');
     const contactElement = document.getElementById('fcontact');
     const formatElement = document.getElementById('fformat');
-    const messageField = document.getElementById('fmessage');
+    // Пробуем найти поле сообщения всеми возможными способами
+    const messageField = document.getElementById('fmessage') || document.querySelector('textarea');
 
     if (!nameElement || !contactElement) return;
 
+    // 2. Вытаскиваем значения
     const name = nameElement.value.trim();
     const contact = contactElement.value.trim();
     const format = formatElement ? formatElement.value : "Не указан";
-    const messageText = messageField ? messageField.value.trim() : "Пусто";
-
+    
+    // Если поле найдено — берем текст, если нет — пишем "Не заполнено"
+    const messageText = (messageField && messageField.value.trim() !== "") ? messageField.value.trim() : "Не заполнено";
     if (!name || !contact) {
         alert('Пожалуйста, заполните имя и контакт.');
         return;

@@ -1,5 +1,4 @@
-name = "my-website"
-pages_build_output_dir = "."
+name = "my-hypno-site"
 
 [observability]
 enabled = true

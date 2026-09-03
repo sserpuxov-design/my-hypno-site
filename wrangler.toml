@@ -1,5 +1,4 @@
 name = "my-hypno-site"
-pages_build_output_dir = "./"
 compatibility_date = "2026-08-31"
 
 [observability]
